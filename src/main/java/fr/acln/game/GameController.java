@@ -1,17 +1,23 @@
 package fr.acln.game;
 
+import fr.acln.security.BearerAuthentication;
+
+import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.*;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static org.codehaus.plexus.util.StringUtils.isNotBlank;
 
 @Path("/games")
+@BearerAuthentication
 public class GameController {
 
-    @Inject
+    @EJB
     private GameService gameService;
 
     @GET
@@ -26,11 +32,11 @@ public class GameController {
 
     @GET
     @Produces(APPLICATION_JSON)
-    @Path("{id}")
+    @Path("/{id}")
     public Response getById(@PathParam("id") String id) {
         return gameService.getById(id)
             .map(game -> ok(game, APPLICATION_JSON).build())
-            .orElse(status(404).build());
+            .orElse(status(NOT_FOUND).build());
     }
 
     @POST
@@ -43,18 +49,18 @@ public class GameController {
     }
 
     @DELETE
-    @Path("{id}")
+    @Path("/{id}")
     @Produces(APPLICATION_JSON)
     public Response delete(@PathParam("id") String id) {
-        return gameService.delete(id) ? noContent().build() : status(400).build();
+        return gameService.delete(id) ? noContent().build() : status(BAD_REQUEST).build();
     }
 
     @PUT
-    @Path("{id}")
+    @Path("/{id}")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response update(@PathParam("id") String id, Game game) {
-        return gameService.update(id, game) ? noContent().build() : status(400).build();
+        return gameService.update(id, game) ? noContent().build() : status(BAD_REQUEST).build();
     }
 
 }

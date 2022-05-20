@@ -3,7 +3,6 @@ package fr.acln.game;
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
 import javax.transaction.UserTransaction;
 import java.util.List;
 import java.util.Optional;
@@ -40,17 +39,17 @@ public class GameDAO {
         }
     }
 
-    public Optional<Game> findById(UUID id) {
+    public Optional<Game> get(UUID id) {
         try {
             userTransaction.begin();
             Optional<Game> maybeGame = entityManager.createQuery(
                     """
                         SELECT game
                         FROM Game game
-                        WHERE game.id = ?1
+                        WHERE game.id = :id
                         """, Game.class
                 )
-                .setParameter(1, id)
+                .setParameter("id", id)
                 .getResultList()
                 .stream()
                 .findFirst();
@@ -70,10 +69,10 @@ public class GameDAO {
             int result = entityManager.createQuery(
                     """
                         DELETE FROM Game game
-                        WHERE game.id = ?1
+                        WHERE game.id = :id
                         """
                 )
-                .setParameter(1, id)
+                .setParameter("id", id)
                 .executeUpdate();
             userTransaction.commit();
 

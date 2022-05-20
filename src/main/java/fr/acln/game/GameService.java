@@ -22,7 +22,7 @@ public class GameService {
     }
 
     public Optional<Game> getById(String id) {
-        return gameDAO.findById(UUID.fromString(id));
+        return gameDAO.get(UUID.fromString(id));
     }
 
     public List<Game> getByName(String name) {
