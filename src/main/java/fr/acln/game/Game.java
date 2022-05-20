@@ -12,6 +12,7 @@ import javax.persistence.Id;
 
 import java.util.UUID;
 
+import static java.util.UUID.randomUUID;
 import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
@@ -22,7 +23,8 @@ import static javax.persistence.GenerationType.IDENTITY;
 public class Game {
 
     @Id
-    private UUID id = UUID.randomUUID();
+    private UUID id = randomUUID();
     private String name;
+    private String platform;
 
 }
