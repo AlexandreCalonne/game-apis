@@ -19,10 +19,10 @@ public class User {
     @Id
     private String username;
 
-    //@JsonbTransient
+    @JsonbTransient
     private String password;
 
-    //@JsonbTransient
+    @JsonbTransient
     private String token;
 
 }

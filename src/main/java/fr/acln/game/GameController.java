@@ -3,14 +3,13 @@ package fr.acln.game;
 import fr.acln.security.BearerAuthentication;
 
 import javax.ejb.EJB;
-import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.*;
 import static org.codehaus.plexus.util.StringUtils.isNotBlank;
 
 @Path("/games")
@@ -22,12 +21,19 @@ public class GameController {
 
     @GET
     @Produces(APPLICATION_JSON)
-    public Response get(@QueryParam("name") String name) {
+    public Response get(@QueryParam("name") String name,
+                        @QueryParam("platform") String platform) {
+        List<Game> games = gameService.getAll();
+
         if (isNotBlank(name)) {
-            return ok(gameService.getByName(name), APPLICATION_JSON).build();
-        } else {
-            return ok(gameService.getAll(), APPLICATION_JSON).build();
+            games.retainAll(gameService.filterByName(games, name));
         }
+
+        if (isNotBlank(platform)) {
+            games.retainAll(gameService.filterByPlatform(games, platform));
+        }
+
+        return ok(games).build();
     }
 
     @GET
@@ -43,16 +49,16 @@ public class GameController {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response add(Game game) {
-        return gameService.add(game)
-            .map(addedGame -> ok(addedGame, APPLICATION_JSON).build())
-            .orElse(serverError().build());
+        gameService.add(game);
+
+        return ok().build();
     }
 
     @DELETE
     @Path("/{id}")
     @Produces(APPLICATION_JSON)
     public Response delete(@PathParam("id") String id) {
-        return gameService.delete(id) ? noContent().build() : status(BAD_REQUEST).build();
+        return gameService.delete(id) ? noContent().build() : status(NOT_FOUND).build();
     }
 
     @PUT
@@ -60,7 +66,9 @@ public class GameController {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response update(@PathParam("id") String id, Game game) {
-        return gameService.update(id, game) ? noContent().build() : status(BAD_REQUEST).build();
+        gameService.update(id, game);
+
+        return noContent().build();
     }
 
 }

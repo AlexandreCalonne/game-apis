@@ -1,14 +1,9 @@
 package fr.acln.user;
 
-import com.google.common.hash.Hashing;
-import fr.acln.security.BearerUtils;
-import org.mindrot.jbcrypt.BCrypt;
-
 import javax.ejb.Stateless;
 import javax.ejb.TransactionManagement;
 import javax.inject.Inject;
-
-import java.nio.charset.StandardCharsets;
+import javax.transaction.Transactional;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -26,44 +21,39 @@ public class UserService {
     @Inject
     private UserDAO userDAO;
 
-    public Optional<User> register(String authorization) {
-        String[] credentials = getDecodedCredentials(authorization);
+    @Transactional
+    public void register(String authorization) {
+        Credentials credentials = getDecodedCredentials(authorization);
 
-        return userDAO.add(User.builder()
-            .username(credentials[0])
-            .password(hashpw(credentials[1], gensalt()))
+        userDAO.add(User.builder()
+            .username(credentials.username())
+            .password(hashpw(credentials.password(), gensalt()))
             .build());
     }
 
+    @Transactional
     public Optional<String> login(String basicAuthorization) {
         if (!basicAuthorization.startsWith("Basic ")) {
             return Optional.empty();
         }
 
-        String[] credentials = getDecodedCredentials(basicAuthorization);
-        Optional<User> maybeUser = userDAO.get(credentials[0]);
+        Credentials credentials = getDecodedCredentials(basicAuthorization);
+        Optional<User> maybeUser = userDAO.get(credentials.username());
 
-        if (maybeUser.isEmpty() || !checkpw(credentials[1], maybeUser.get().getPassword())) {
+        if (maybeUser.isEmpty() || !checkpw(credentials.password(), maybeUser.get().getPassword())) {
             return Optional.empty();
         }
 
         User user = maybeUser.get();
-        user.setToken(generateToken(user));
-        if (!userDAO.update(user)) {
-            return Optional.empty();
-        }
+        String token = generateToken(user);
 
-        return Optional.of(user.getToken());
+        user.setToken(token);
+        userDAO.update(user);
+
+        return Optional.of(token);
     }
 
-    public List<User> getAll() {
-        return userDAO.getAll();
-    }
-
-    private String generateToken(User user) {
-        return sha256().hashString(user.getUsername() + user.getPassword(), UTF_8).toString();
-    }
-
+    @Transactional
     public boolean logout(String bearerAuthorization) {
         if (!bearerAuthorization.startsWith("Bearer ")) {
             return false;
@@ -72,10 +62,22 @@ public class UserService {
         return userDAO.removeToken(extractTokenFromAuthorizationHeader(bearerAuthorization));
     }
 
-    private String[] getDecodedCredentials(String authorization) {
-        return new String(
+    public List<User> getAll() {
+        return userDAO.getAll();
+    }
+
+    private String generateToken(User user) {
+        return sha256()
+            .hashString(user.getUsername() + user.getPassword(), UTF_8)
+            .toString();
+    }
+
+    private Credentials getDecodedCredentials(String authorization) {
+        String[] splitCredentials = new String(
             Base64.getDecoder().decode(authorization.replace("Basic ", ""))
         ).split(":");
+
+        return new Credentials(splitCredentials[0], splitCredentials[1]);
     }
 
 }

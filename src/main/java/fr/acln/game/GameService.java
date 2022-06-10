@@ -3,6 +3,7 @@ package fr.acln.game;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionManagement;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,10 +26,16 @@ public class GameService {
         return gameDAO.get(UUID.fromString(id));
     }
 
-    public List<Game> getByName(String name) {
-        return gameDAO.getAll().stream()
+    public List<Game> filterByName(List<Game> games, String name) {
+        return games.stream()
             .filter(game -> countMatchingWords(name, game) > 0)
             .sorted((game1, game2) -> countMatchingWords(name, game2) - countMatchingWords(name, game1))
+            .toList();
+    }
+
+    public List<Game> filterByPlatform(List<Game> games, String platform) {
+        return games.stream()
+            .filter(game -> game.getPlatform().equals(platform))
             .toList();
     }
 
@@ -36,14 +43,14 @@ public class GameService {
         return gameDAO.delete(UUID.fromString(id));
     }
 
-    public Optional<Game> add(Game game) {
-        return gameDAO.add(game);
+    @Transactional
+    public void add(Game game) {
+        gameDAO.add(game);
     }
 
-    public boolean update(String id, Game game) {
+    @Transactional
+    public void update(String id, Game game) {
         game.setId(UUID.fromString(id));
-
-        return gameDAO.update(game);
     }
 
     private int countMatchingWords(String searchInput, Game game) {
