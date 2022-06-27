@@ -18,6 +18,7 @@
 		<microprofile.version>3.0</microprofile.version>
 		<mockito-core.version>3.1.0</mockito-core.version>
 		<junit-jupiter.version>5.5.0</junit-jupiter.version>
+        <java.version>17</java.version>
 	</properties>
 
     <dependencies>
