@@ -23,6 +23,8 @@ import static org.mindrot.jbcrypt.BCrypt.*;
 @TransactionManagement(BEAN)
 public class UserService {
 
+    public static final String BASIC = "Basic ";
+
     @Inject
     private UserDAO userDAO;
 
@@ -41,7 +43,7 @@ public class UserService {
 
     @Transactional
     public Optional<String> login(String basicAuthorization) {
-        if (!basicAuthorization.startsWith("Basic ")) {
+        if (!basicAuthorization.startsWith(BASIC)) {
             return Optional.empty();
         }
 
@@ -96,13 +98,13 @@ public class UserService {
 
     private String generateToken(User user) {
         return sha256()
-            .hashString(user.getUsername() + user.getPassword(), UTF_8)
+            .hashString(user.getUsername() + user.getPassword() + System.currentTimeMillis(), UTF_8)
             .toString();
     }
 
     private Credentials getDecodedCredentials(String authorization) {
         String[] splitCredentials = new String(
-            Base64.getDecoder().decode(authorization.replace("Basic ", ""))
+            Base64.getDecoder().decode(authorization.replace(BASIC, ""))
         ).split(":");
 
         return new Credentials(splitCredentials[0], splitCredentials[1]);

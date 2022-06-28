@@ -67,6 +67,7 @@ public class UserController {
     @GET
     @Produces(APPLICATION_JSON)
     @Path("/{username}")
+    @BearerAuthentication
     public Response getByUsername(@PathParam("username") String username) {
         return userService.getByUsername(username)
             .map(user -> ok(user, APPLICATION_JSON).build())
