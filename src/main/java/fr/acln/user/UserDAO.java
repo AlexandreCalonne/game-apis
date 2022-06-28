@@ -46,8 +46,8 @@ public class UserDAO {
         return result != 0;
     }
 
-    public boolean isTokenValid(String token) {
-        List<User> users = entityManager.createQuery(
+    public Optional<User> getFromToken(String token) {
+        return entityManager.createQuery(
                 """
                     SELECT user
                     FROM User user
@@ -55,9 +55,9 @@ public class UserDAO {
                     """, User.class
             )
             .setParameter("token", token)
-            .getResultList();
-
-        return users.size() > 0;
+            .getResultList()
+            .stream()
+            .findFirst();
     }
 
     public List<User> getAll() {

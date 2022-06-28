@@ -4,7 +4,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 public class GameDAO {
 
@@ -21,7 +20,7 @@ public class GameDAO {
             .getResultList();
     }
 
-    public Optional<Game> get(UUID id) {
+    public Optional<Game> get(String id) {
         return entityManager.createQuery(
                 """
                     SELECT game
@@ -35,7 +34,7 @@ public class GameDAO {
             .findFirst();
     }
 
-    public boolean delete(UUID id) {
+    public boolean delete(String id) {
         int result = entityManager.createQuery(
                 """
                     DELETE FROM Game game

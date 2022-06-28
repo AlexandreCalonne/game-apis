@@ -9,7 +9,6 @@ public class BearerUtils {
     }
 
     public static String extractTokenFromAuthorizationHeader(String authorizationHeader) {
-        System.out.println("EXTRACT: " + authorizationHeader.substring(BEARER.length()).trim());
         return authorizationHeader.substring(BEARER.length()).trim();
     }
 

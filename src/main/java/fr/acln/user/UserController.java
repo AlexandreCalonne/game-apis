@@ -9,6 +9,7 @@ import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.*;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
 @Path("/users")
 public class UserController {
@@ -42,10 +43,34 @@ public class UserController {
         return userService.logout(bearerAuthorization) ? noContent().build() : status(BAD_REQUEST).build();
     }
 
+    @POST
+    @Path("/games/{gameId}")
+    @BearerAuthentication
+    public Response addLikedGame(@HeaderParam("username") String username,  @PathParam("gameId") String gameId) {
+        userService.addLikedGame(username, gameId);
+
+        if (!userService.addLikedGame(username, gameId)) {
+            return status(NOT_FOUND).build();
+        }
+
+        return noContent().build();
+
+    }
+
     @GET
     @Produces(APPLICATION_JSON)
+    @BearerAuthentication
     public Response getAll() {
         return ok(userService.getAll()).build();
+    }
+
+    @GET
+    @Produces(APPLICATION_JSON)
+    @Path("/{username}")
+    public Response getByUsername(@PathParam("username") String username) {
+        return userService.getByUsername(username)
+            .map(user -> ok(user, APPLICATION_JSON).build())
+            .orElse(status(NOT_FOUND).build());
     }
 
 }

@@ -1,5 +1,9 @@
 package fr.acln.user;
 
+import fr.acln.game.Game;
+import fr.acln.game.GameDAO;
+import fr.acln.game.GameService;
+
 import javax.ejb.Stateless;
 import javax.ejb.TransactionManagement;
 import javax.inject.Inject;
@@ -7,6 +11,7 @@ import javax.transaction.Transactional;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static com.google.common.hash.Hashing.sha256;
 import static fr.acln.security.BearerUtils.extractTokenFromAuthorizationHeader;
@@ -20,6 +25,9 @@ public class UserService {
 
     @Inject
     private UserDAO userDAO;
+
+    @Inject
+    private GameService gameService;
 
     @Transactional
     public void register(String authorization) {
@@ -62,8 +70,28 @@ public class UserService {
         return userDAO.removeToken(extractTokenFromAuthorizationHeader(bearerAuthorization));
     }
 
+    @Transactional
+    public boolean addLikedGame(String username, String gameId) {
+        Optional<User> maybeUser = userDAO.get(username);
+        Optional<Game> maybeGame = gameService.getById(gameId);
+
+        if (maybeUser.isEmpty() || maybeGame.isEmpty()) {
+            return false;
+        }
+
+        maybeUser.get().getGames().add(maybeGame.get());
+        userDAO.update(maybeUser.get());
+
+        return true;
+
+    }
+
     public List<User> getAll() {
         return userDAO.getAll();
+    }
+
+    public Optional<User> getByUsername(String username) {
+        return userDAO.get(username);
     }
 
     private String generateToken(User user) {

@@ -1,15 +1,18 @@
 package fr.acln.security;
 
+import fr.acln.user.User;
 import fr.acln.user.UserDAO;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
+import javax.swing.text.html.Option;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
+
+import java.util.Optional;
 
 import static fr.acln.security.BearerUtils.extractTokenFromAuthorizationHeader;
 import static fr.acln.security.BearerUtils.isRequestBearerAuthentication;
@@ -28,7 +31,11 @@ public class BearerAuthenticationFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext requestContext) {
         String authorizationHeader = requestContext.getHeaderString(AUTHORIZATION);
 
-        if (isUnauthorized(authorizationHeader)) {
+        Optional<User> maybeUser = getUserFromToken(authorizationHeader);
+
+        if (maybeUser.isPresent()) {
+            requestContext.getHeaders().add("username", maybeUser.get().getUsername());
+        } else {
             abortWithUnauthorized(requestContext);
         }
     }
@@ -37,9 +44,12 @@ public class BearerAuthenticationFilter implements ContainerRequestFilter {
         requestContext.abortWith(Response.status(UNAUTHORIZED).build());
     }
 
-    private boolean isUnauthorized(String authorizationHeader) {
-        return !isRequestBearerAuthentication(authorizationHeader)
-            || !userDAO.isTokenValid(extractTokenFromAuthorizationHeader(authorizationHeader));
+    private Optional<User> getUserFromToken(String authorizationHeader) {
+        if (isRequestBearerAuthentication(authorizationHeader)) {
+            return userDAO.getFromToken(extractTokenFromAuthorizationHeader(authorizationHeader));
+        }
+
+        return Optional.empty();
     }
 
 }

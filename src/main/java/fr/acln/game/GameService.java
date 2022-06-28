@@ -23,7 +23,7 @@ public class GameService {
     }
 
     public Optional<Game> getById(String id) {
-        return gameDAO.get(UUID.fromString(id));
+        return gameDAO.get(id);
     }
 
     public List<Game> filterByName(List<Game> games, String name) {
@@ -39,8 +39,9 @@ public class GameService {
             .toList();
     }
 
+    @Transactional
     public boolean delete(String id) {
-        return gameDAO.delete(UUID.fromString(id));
+        return gameDAO.delete(id);
     }
 
     @Transactional
@@ -50,7 +51,8 @@ public class GameService {
 
     @Transactional
     public void update(String id, Game game) {
-        game.setId(UUID.fromString(id));
+        game.setId(id);
+        gameDAO.update(game);
     }
 
     private int countMatchingWords(String searchInput, Game game) {
